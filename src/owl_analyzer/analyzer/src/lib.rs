@@ -4,6 +4,7 @@ use std::{
     path::PathBuf,
     process::Stdio,
     rc::Rc,
+    thread,
 };
 
 use evidence::Evidence;
@@ -129,25 +130,32 @@ impl Analyzer {
 fn exec(cmd: &str) -> Result<(), ()> {
     log::debug!("execute test program");
 
-    let mut p = std::process::Command::new("sh");
-    p.arg("-c");
-    p.arg(cmd);
-    let stdout = p
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .expect("failed to execute child")
-        .stdout
-        .unwrap();
+    let mut builder = std::process::Command::new("sh");
+    builder.arg("-c").arg(cmd);
+    builder.stdout(Stdio::piped()).stderr(Stdio::piped());
+    let mut child = builder.spawn().expect("failed to execute child");
 
-    let reader = BufReader::new(stdout);
+    // Drain stderr in background to avoid potential blocking if it gets chatty
+    if let Some(stderr) = child.stderr.take() {
+        thread::spawn(move || {
+            let reader = BufReader::new(stderr);
+            for _ in reader.lines().flatten() {
+                // Discard or print lines if desired: eprintln!("{}", line);
+            }
+        });
+    }
 
-    reader
-        .lines()
-        .filter_map(|line| line.ok())
-        .for_each(|line| println!("{}", line));
+    // Read stdout synchronously for user feedback
+    if let Some(stdout) = child.stdout.take() {
+        let reader = BufReader::new(stdout);
+        for line in reader.lines().flatten() {
+            println!("{}", line);
+        }
+    }
 
-    Ok(())
+    // Ensure the child has fully exited before proceeding, so tracer flushes complete
+    let status = child.wait().expect("failed to wait on child");
+    if status.success() { Ok(()) } else { Err(()) }
 }
 
 fn prepare(root_path: &str, stage: &str, idx: usize) -> DataAcceptor {

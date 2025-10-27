@@ -5,6 +5,7 @@ use std::{
     process::Stdio,
     rc::Rc,
     thread,
+    time::Duration,
 };
 
 use evidence::Evidence;
@@ -156,9 +157,13 @@ fn exec(cmd: &str) -> Result<(), ()> {
     // Ensure the child has fully exited before proceeding, so tracer flushes complete
     let status = child.wait().expect("failed to wait on child");
     log::debug!("child exit status: {:?}", status.code());
+    
+    // Give tracer a moment to flush files asynchronously after process exit
+    thread::sleep(Duration::from_millis(500));
+    
     // Match original behavior: do not fail the run on non-zero exit; the
     // tracer may still have produced traces we can consume.
-    Ok(())
+    Ok()
 }
 
 fn prepare(root_path: &str, stage: &str, idx: usize) -> DataAcceptor {

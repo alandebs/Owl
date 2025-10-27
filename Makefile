@@ -41,5 +41,5 @@ test-docker: docker-build
 	    cd /root/owl && \
 	    src/owl_analyzer/target/release/owl_analyzer \
 	      --cmds-file example/cuda-examples/cmds \
-	      --rand-cmd "src/owl-wrapper example/cuda-examples/randaccess" \
+	      --rand-cmd "/root/owl/src/owl-wrapper /root/owl/example/cuda-examples/randaccess" \
 	      -t $(RUNS)'

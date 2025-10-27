@@ -66,8 +66,8 @@ impl DataAcceptor {
 
     fn wait_open(&self, filename: &str) -> Option<File> {
         let full = format!("{}/{}", self.path, filename);
-        // Wait up to ~5s for the tracer to flush files
-        for _ in 0..50u32 {
+        // Wait up to ~30s for the tracer to flush files (Docker can be slower)
+        for _ in 0..300u32 {
             if let Ok(f) = File::open(&full) {
                 return Some(f);
             }

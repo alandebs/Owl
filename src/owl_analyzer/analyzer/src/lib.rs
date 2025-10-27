@@ -155,7 +155,10 @@ fn exec(cmd: &str) -> Result<(), ()> {
 
     // Ensure the child has fully exited before proceeding, so tracer flushes complete
     let status = child.wait().expect("failed to wait on child");
-    if status.success() { Ok(()) } else { Err(()) }
+    log::debug!("child exit status: {:?}", status.code());
+    // Match original behavior: do not fail the run on non-zero exit; the
+    // tracer may still have produced traces we can consume.
+    Ok(())
 }
 
 fn prepare(root_path: &str, stage: &str, idx: usize) -> DataAcceptor {

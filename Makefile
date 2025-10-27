@@ -37,7 +37,7 @@ test-docker: docker-build
 	  -v "$$PWD":/root/owl \
 	  -w /root/owl \
 	  $(DOCKER_IMAGE) \
-	  bash -lc 'make ARCH=$(ARCH) && cd example/cuda-examples && make && \
+	  bash -lc 'make clean || true && make ARCH=$(ARCH) && cd example/cuda-examples && make clean && make && \
 	    cd /root/owl && \
 	    src/owl_analyzer/target/release/owl_analyzer \
 	      --cmds-file example/cuda-examples/cmds \

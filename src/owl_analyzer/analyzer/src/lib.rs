@@ -163,7 +163,7 @@ fn exec(cmd: &str) -> Result<(), ()> {
     
     // Match original behavior: do not fail the run on non-zero exit; the
     // tracer may still have produced traces we can consume.
-    Ok()
+    Ok(())
 }
 
 fn prepare(root_path: &str, stage: &str, idx: usize) -> DataAcceptor {

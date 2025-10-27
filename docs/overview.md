@@ -88,6 +88,30 @@ Tip: `ARCH=86` targets NVIDIA Ampere (e.g., RTX 3090 Ti). Adjust as needed for y
 
 ## Run the CUDA example (native)
 
+### Try it quickly (native paths)
+
+```bash
+# Set once per shell
+REPO=/home/alan/Documents/Owl
+
+# Build the example
+cd $REPO/example/cuda-examples
+make
+
+# Create cmds.local if it doesn't exist yet
+if [ ! -f cmds.local ]; then
+  printf "%s\n" "$REPO/src/owl-wrapper $REPO/example/cuda-examples/randaccess" > cmds.local
+fi
+
+# Run the analyzer (2 runs per phase)
+$REPO/src/owl_analyzer/target/release/owl_analyzer \
+  --cmds-file $REPO/example/cuda-examples/cmds.local \
+  --rand-cmd "$REPO/src/owl-wrapper $REPO/example/cuda-examples/randaccess" \
+  -t 2
+```
+
+### Step-by-step
+
 1) Build the example:
 
 ```bash

@@ -1,4 +1,4 @@
-use std::{fs::File, io::BufReader};
+use std::{fs::File, io::BufReader, path::Path, thread, time::Duration};
 
 use crate::raw::{RawAlloc, RawCsFrame, RawData, RawKernelTrace, RawTrace};
 
@@ -64,8 +64,22 @@ impl DataAcceptor {
         }
     }
 
+    fn wait_open(&self, filename: &str) -> Option<File> {
+        let full = format!("{}/{}", self.path, filename);
+        // Wait up to ~5s for the tracer to flush files
+        for _ in 0..50u32 {
+            if let Ok(f) = File::open(&full) {
+                return Some(f);
+            }
+            thread::sleep(Duration::from_millis(100));
+        }
+        None
+    }
+
     pub fn kernel(&self) -> Vec<RawKernelTrace> {
-        let file = File::open(format!("{}/kernel.json", self.path)).unwrap();
+        let file = self
+            .wait_open("kernel.json")
+            .unwrap_or_else(|| panic!("kernel.json not found at {} after waiting", self.path));
         let reader = BufReader::new(file);
         let data = serde_json::from_reader(reader).unwrap();
         if let RawData::Kernel(d) = data {
@@ -79,7 +93,9 @@ impl DataAcceptor {
     }
 
     pub fn context(&self) -> Vec<Vec<RawCsFrame>> {
-        let file = File::open(format!("{}/context.json", self.path)).unwrap();
+        let file = self
+            .wait_open("context.json")
+            .unwrap_or_else(|| panic!("context.json not found at {} after waiting", self.path));
         let reader = BufReader::new(file);
         let data = serde_json::from_reader(reader).unwrap();
         if let RawData::Context(d) = data {
@@ -90,7 +106,11 @@ impl DataAcceptor {
     }
 
     pub fn alloc(&self) -> Vec<RawAlloc> {
-        if let Ok(file) = File::open(format!("{}/alloc.json", self.path)) {
+        let alloc_path = format!("{}/alloc.json", self.path);
+        if !Path::new(&alloc_path).exists() {
+            return Vec::new();
+        }
+        if let Some(file) = self.wait_open("alloc.json") {
             let reader = BufReader::new(file);
             let data = serde_json::from_reader(reader).unwrap();
             if let RawData::Alloc(d) = data {

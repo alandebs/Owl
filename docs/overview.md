@@ -162,6 +162,54 @@ What it does:
 - `--rand-cmd` is the command to run for randomized inputs
 - `-t 2` runs each phase twice (increase for stronger statistics)
 
+## Run the CUDA example (Docker)
+
+Prerequisites:
+- Docker installed and the NVIDIA Container Toolkit configured for GPU access.
+- An NVIDIA GPU on the host.
+
+Build the image (from the repo root):
+
+```bash
+docker build -t owl:devel .
+```
+
+Recommended: run the container with your current checkout mounted at `/root/owl` and GPU access enabled:
+
+```bash
+# From your repo root on the host
+docker run --gpus all --rm -it \
+  -v "$PWD":/root/owl \
+  -w /root/owl \
+  owl:devel bash
+```
+
+Inside the container, build and run just like native (paths are already `/root/owl` and the example’s `cmds` uses those paths):
+
+```bash
+make ARCH=86
+cd example/cuda-examples && make
+src/owl_analyzer/target/release/owl_analyzer \
+  --cmds-file example/cuda-examples/cmds \
+  --rand-cmd "src/owl-wrapper example/cuda-examples/randaccess" \
+  -t 2
+```
+
+Optional one-liner (no interactive shell):
+
+```bash
+docker run --gpus all --rm -it \
+  -v "$PWD":/root/owl -w /root/owl owl:devel \
+  bash -lc 'make ARCH=86 && cd example/cuda-examples && make && \
+    src/owl_analyzer/target/release/owl_analyzer \
+      --cmds-file example/cuda-examples/cmds \
+      --rand-cmd "src/owl-wrapper example/cuda-examples/randaccess" -t 2'
+```
+
+Notes:
+- The provided Dockerfile sets up the toolchain. When you mount your repo, the container uses your current sources rather than cloning.
+- If you choose not to mount, the Dockerfile’s cloning step targets the upstream repository; you’ll need network and credentials if using SSH URLs. Mounting is preferred.
+
 ## Interpreting results
 
 The analyzer writes a JSON report to `owl_results/<i>/report.json`.
@@ -191,14 +239,7 @@ Example snippet:
 
 ## Using Docker (optional)
 
-If you prefer a containerized environment:
-
-```bash
-docker build -t owl:1.0 .
-docker run --gpus all --rm -it owl:1.0 bash
-```
-
-Inside the container, the repo lives under `/root/owl`, and the example’s `cmds` file already uses those paths.
+Prefer the end-to-end steps in “Run the CUDA example (Docker)” above. The short version is: build the image, run with `--gpus all` and a bind mount to `/root/owl`, then follow the native build/run steps inside the container.
 
 ## Configuration knobs
 

@@ -90,6 +90,8 @@ Tip: `ARCH=86` targets NVIDIA Ampere (e.g., RTX 3090 Ti). Adjust as needed for y
 
 ### Try it quickly (native paths)
 
+Tip: Prefer a one-liner? See [Convenience: `make test-native`](#convenience-make-test-native).
+
 ```bash
 # Set once per shell
 REPO=/home/alan/Documents/Owl

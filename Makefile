@@ -38,6 +38,7 @@ test-docker: docker-build
 	  -w /root/owl \
 	  $(DOCKER_IMAGE) \
 	  bash -lc 'make ARCH=$(ARCH) && cd example/cuda-examples && make && \
+	    cd /root/owl && \
 	    src/owl_analyzer/target/release/owl_analyzer \
 	      --cmds-file example/cuda-examples/cmds \
 	      --rand-cmd "src/owl-wrapper example/cuda-examples/randaccess" \

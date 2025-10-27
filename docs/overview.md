@@ -140,6 +140,22 @@ Example for `/home/alan/Documents/Owl`:
   -t 2
 ```
 
+### Convenience: `make test-native`
+
+If your checkout includes the `test-native` helper target, you can run the full native flow with one command:
+
+```bash
+make ARCH=86 test-native         # default: RUNS=2
+make ARCH=86 RUNS=3 test-native  # customize number of runs per phase
+```
+
+What it does:
+- Builds the analyzer and monitor
+- Builds `example/cuda-examples`
+- Creates `example/cuda-examples/cmds.local` with native paths if missing
+- Runs the analyzer end-to-end and writes `owl_results/<i>/report.json`
+
+
 - `--cmds-file` lists commands for the fixed‑input phase
 - `--rand-cmd` is the command to run for randomized inputs
 - `-t 2` runs each phase twice (increase for stronger statistics)

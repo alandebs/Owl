@@ -26,8 +26,22 @@ use crate::raw::{RawAlloc, RawCsFrame, RawData, RawKernelTrace, RawTrace};
 //     //         let mut reader = BufReader::new(File::open(p1).unwrap());
 //     //         let mut type_buf = [0u8; 1];
 //     //         loop {
+//     //             match accept(&mut reader, &mut type_buf) {
+//     //                 Ok((ty, content)) => {
+//     //                     assert_eq!(ty, TYPE_GPU_MEM_ALLOC);
+//     //                     mp_clone.lock().unwrap().push(content.into());
+//     //                 }
+//     //                 Err(_) => {}
+//     //             }
+//     //         }
+//     //     });
+
+//     //     let reader = BufReader::new(std::fs::File::open(p2).unwrap());
+
 //     //     // let mem_pools: RawData = serde_json::from_reader(reader).unwrap();
-        let file = File::open(format!("{}/kernel.json", self.path)).unwrap();
+//     //     let trace: Vec<RawData> = serde_json::from_reader(reader).unwrap();
+
+//     //     // let trace = RawTrace::from_kernels(kernels, mem_pools.lock().unwrap().deref());
 
 //     //     log::debug!("Recording finish");
 
@@ -41,25 +55,17 @@ pub struct DataAcceptor {
     path: String,
     // kernels: HashMap<KernelTy, String>,
 }
-        let file = File::open(format!("{}/context.json", self.path)).unwrap();
+
+impl DataAcceptor {
+    pub fn new(path: String) -> Self {
         Self {
             path,
             // kernels: HashMap::default(),
         }
     }
 
-    fn wait_open(&self, filename: &str) -> Option<File> {
-        let full = format!("{}/{}", self.path, filename);
-        // Wait up to ~30s for the tracer to flush files (Docker can be slower)
-        for _ in 0..300u32 {
-        if let Ok(file) = File::open(format!("{}/alloc.json", self.path)) {
-        None
-    }
-
     pub fn kernel(&self) -> Vec<RawKernelTrace> {
-        let file = self
-            .wait_open("kernel.json")
-            .unwrap_or_else(|| panic!("kernel.json not found at {} after waiting", self.path));
+        let file = File::open(format!("{}/kernel.json", self.path)).unwrap();
         let reader = BufReader::new(file);
         let data = serde_json::from_reader(reader).unwrap();
         if let RawData::Kernel(d) = data {
@@ -73,9 +79,7 @@ pub struct DataAcceptor {
     }
 
     pub fn context(&self) -> Vec<Vec<RawCsFrame>> {
-        let file = self
-            .wait_open("context.json")
-            .unwrap_or_else(|| panic!("context.json not found at {} after waiting", self.path));
+        let file = File::open(format!("{}/context.json", self.path)).unwrap();
         let reader = BufReader::new(file);
         let data = serde_json::from_reader(reader).unwrap();
         if let RawData::Context(d) = data {
@@ -86,11 +90,7 @@ pub struct DataAcceptor {
     }
 
     pub fn alloc(&self) -> Vec<RawAlloc> {
-        let alloc_path = format!("{}/alloc.json", self.path);
-        if !Path::new(&alloc_path).exists() {
-            return Vec::new();
-        }
-        if let Some(file) = self.wait_open("alloc.json") {
+        if let Ok(file) = File::open(format!("{}/alloc.json", self.path)) {
             let reader = BufReader::new(file);
             let data = serde_json::from_reader(reader).unwrap();
             if let RawData::Alloc(d) = data {

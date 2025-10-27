@@ -1,4 +1,4 @@
-use std::{fs::File, io::BufReader, path::Path, thread, time::Duration};
+use std::{fs::File, io::BufReader};
 
 use crate::raw::{RawAlloc, RawCsFrame, RawData, RawKernelTrace, RawTrace};
 
@@ -26,22 +26,8 @@ use crate::raw::{RawAlloc, RawCsFrame, RawData, RawKernelTrace, RawTrace};
 //     //         let mut reader = BufReader::new(File::open(p1).unwrap());
 //     //         let mut type_buf = [0u8; 1];
 //     //         loop {
-//     //             match accept(&mut reader, &mut type_buf) {
-//     //                 Ok((ty, content)) => {
-//     //                     assert_eq!(ty, TYPE_GPU_MEM_ALLOC);
-//     //                     mp_clone.lock().unwrap().push(content.into());
-//     //                 }
-//     //                 Err(_) => {}
-//     //             }
-//     //         }
-//     //     });
-
-//     //     let reader = BufReader::new(std::fs::File::open(p2).unwrap());
-
 //     //     // let mem_pools: RawData = serde_json::from_reader(reader).unwrap();
-//     //     let trace: Vec<RawData> = serde_json::from_reader(reader).unwrap();
-
-//     //     // let trace = RawTrace::from_kernels(kernels, mem_pools.lock().unwrap().deref());
+        let file = File::open(format!("{}/kernel.json", self.path)).unwrap();
 
 //     //     log::debug!("Recording finish");
 
@@ -55,9 +41,7 @@ pub struct DataAcceptor {
     path: String,
     // kernels: HashMap<KernelTy, String>,
 }
-
-impl DataAcceptor {
-    pub fn new(path: String) -> Self {
+        let file = File::open(format!("{}/context.json", self.path)).unwrap();
         Self {
             path,
             // kernels: HashMap::default(),
@@ -68,11 +52,7 @@ impl DataAcceptor {
         let full = format!("{}/{}", self.path, filename);
         // Wait up to ~30s for the tracer to flush files (Docker can be slower)
         for _ in 0..300u32 {
-            if let Ok(f) = File::open(&full) {
-                return Some(f);
-            }
-            thread::sleep(Duration::from_millis(100));
-        }
+        if let Ok(file) = File::open(format!("{}/alloc.json", self.path)) {
         None
     }
 

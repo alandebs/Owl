@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     io::{BufRead, BufReader},
+    path::PathBuf,
     process::Stdio,
     rc::Rc,
 };
@@ -150,10 +151,16 @@ fn exec(cmd: &str) -> Result<(), ()> {
 }
 
 fn prepare(root_path: &str, stage: &str, idx: usize) -> DataAcceptor {
-    let trace_path = format!("{root_path}/{stage}/{idx}/");
-    log::info!("Recorded trace path: {}", trace_path);
-    std::fs::create_dir_all(&trace_path).unwrap();
+    // Build absolute path for OWL_TRACE to avoid any cwd ambiguity
+    let mut path = PathBuf::from(root_path);
+    path.push(stage);
+    path.push(idx.to_string());
 
+    std::fs::create_dir_all(&path).unwrap();
+    let abs = std::fs::canonicalize(&path).unwrap_or(path);
+    let trace_path = abs.to_string_lossy().to_string() + "/";
+
+    log::info!("Recorded trace path: {}", trace_path);
     std::env::set_var("OWL_TRACE", &trace_path);
 
     DataAcceptor::new(trace_path)

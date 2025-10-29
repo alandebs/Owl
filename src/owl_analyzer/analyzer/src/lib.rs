@@ -31,6 +31,7 @@ mod trace;
 // pub use trace::Trace;
 
 mod align;
+pub mod plot;
 
 pub struct Analyzer {
     // pub pipe_path: String,

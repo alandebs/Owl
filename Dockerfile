@@ -8,7 +8,8 @@ WORKDIR /root
 RUN apt update && \
         DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
             build-essential ninja-build python3 python3-pip python3-setuptools \
-            curl git g++-multilib wget bc ca-certificates clang && \
+            curl git g++-multilib wget bc ca-certificates clang \
+            pkg-config libfontconfig1-dev && \
         rm -rf /var/lib/apt/lists/* && \
         python3 -m pip install --no-cache-dir pyyaml typing-extensions numpy scipy matplotlib
 
